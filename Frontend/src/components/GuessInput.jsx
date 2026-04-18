@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function GuessInput({ options, guesses, onSubmit, disabled }) {
+export default function GuessInput({ options, guesses, onSubmit, disabled, attributes }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -30,9 +30,24 @@ export default function GuessInput({ options, guesses, onSubmit, disabled }) {
       />
       {open && query && filtered.length > 0 && (
         <ul className="suggestions">
+          <li className="suggestions-header">
+            <div className="guess-row">
+              <div className="cell cell--name">Option</div>
+              {attributes.map((attr) => (
+                <div key={attr} className="cell cell--header">{attr}</div>
+              ))}
+            </div>
+          </li>
           {filtered.map((o) => (
-            <li key={o.name} onMouseDown={() => handleSelect(o.name)}>
-              {o.name}
+            <li key={o.name} onMouseDown={() => handleSelect(o.name)} className="suggestion-row">
+              <div className="guess-row">
+                <div className="cell cell--name">{o.name}</div>
+                {attributes.map((attr) => (
+                  <div key={attr} className="cell cell--neutral">
+                    {String(o[attr])}
+                  </div>
+                ))}
+              </div>
             </li>
           ))}
         </ul>

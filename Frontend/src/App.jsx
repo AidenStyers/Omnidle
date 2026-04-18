@@ -14,7 +14,7 @@ export default function App() {
         {won ? (
           <div className="banner banner--win">You got it in {guesses.length}!</div>
         ) : (
-          <GuessInput options={options} guesses={guesses} onSubmit={submitGuess} disabled={won} />
+          <GuessInput options={options} guesses={guesses} onSubmit={submitGuess} disabled={won} attributes={topic.attributes} />
         )}
         <GameBoard guesses={guesses} attributes={topic.attributes} />
       </main>

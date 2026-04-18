@@ -1,22 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --bg: #0f0f13;
-  --surface: #1a1a24;
-  --border: #2e2e3e;
-  --text: #e0e0f0;
-  --text-muted: #7a7a9a;
-  --correct: #538d4e;
-  --wrong: #3a3a4e;
-  --higher: #b59f3b;
-  --lower: #b59f3b;
-  --accent: #818cf8;
-  font-family: system-ui, sans-serif;
+  --bg: #f4f3ff;
+  --bg2: #eceaff;
+  --surface: #ffffff;
+  --surface2: #f0effe;
+  --border: #dddaf5;
+  --text: #1a1830;
+  --text-muted: #8884aa;
+  --correct: #dcfce7;
+  --correct-text: #166534;
+  --wrong: #efefef;
+  --wrong-text: #9999aa;
+  --hint: #fef9c3;
+  --hint-text: #854d0e;
+  --accent1: #6366f1;
+  --accent2: #a855f7;
+  --accent3: #0ea5e9;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
 }
 
-body { margin: 0; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(168,85,247,0.1) 0%, transparent 70%),
+    var(--bg);
+  min-height: 100svh;
+}
 
 #root {
   min-height: 100svh;
