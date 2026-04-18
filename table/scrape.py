@@ -4,43 +4,67 @@ import os
 import re
 import json
 import time
+import random
 from io import StringIO
 from bs4 import BeautifulSoup
 
 # --- 1. Helper Function ---
-def to_camel_case(text):
+def get_clean_filename(text, index=None):
     # Remove non-alphanumeric characters and split by whitespace
     words = re.sub(r'[^a-zA-Z0-9\s]', '', text).split()
     if not words:
-        return "scrapedData.js"
-    # lowercase first word, capitalize subsequent words
-    return words[0].lower() + ''.join(word.capitalize() for word in words[1:]) + ".js"
+        base_name = "scrapedData"
+    else:
+        # lowercase first word, capitalize subsequent words
+        base_name = words[0].lower() + ''.join(word.capitalize() for word in words[1:])
+    
+    # Add index suffix if multiple tables are found to avoid overwriting
+    suffix = f"_{index}" if index is not None else ""
+    return f"{base_name}{suffix}.json"
 
 # --- 2. Setup ---
-random_url = "https://en.wikipedia.org/wiki/Special:Random"
-headers = {'User-Agent': 'Mozilla/5.0'}
-
-# Define thresholds
+# Thresholds for a valid table
 MIN_ROWS = 10
 MIN_COLS = 4
+headers = {'User-Agent': 'Mozilla/5.0'}
+CANDIDATES_FILE = "./candidateTables.txt"
+OUTPUT_DIR = "./tables"
 
-# --- 3. User Input ---
-user_input = input("Enter a Wikipedia URL (or press Enter for a random article): ").strip()
-target_url = user_input if user_input else random_url
-is_random = not user_input
+# Ensure output directory exists
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 
-valid_table_found = False
-attempts = 0
+# --- 3. User Input & Mode Selection ---
+user_input = input("Enter a Wikipedia URL (or press Enter to use a random one from candidateTables.txt): ").strip()
 
-if is_random:
-    print(f"🚀 Random Mode: Searching for a table with at least {MIN_ROWS} rows and {MIN_COLS} columns...")
+if user_input:
+    target_urls = [user_input]
+    is_random = False
+    print(f"🎯 Target Mode: Attempting to scrape {user_input}...")
 else:
-    print(f"🎯 Target Mode: Attempting to scrape {target_url}...")
+    is_random = True
+    if os.path.exists(CANDIDATES_FILE):
+        with open(CANDIDATES_FILE, 'r', encoding='utf-8') as f:
+            # Convert lines to full Wikipedia URLs
+            lines = [line.strip() for line in f if line.strip()]
+            # Shuffle the list to choose a random starting point
+            random.shuffle(lines)
+            target_urls = [f"https://en.wikipedia.org/wiki/{line}" for line in lines]
+        print(f"📂 Shuffle Mode: Searching through curated articles in random order...")
+    else:
+        print(f"🚨 Error: {CANDIDATES_FILE} not found. Please create the file or enter a URL.")
+        target_urls = []
 
-while not valid_table_found:
-    attempts += 1
+valid_article_found = False
+
+# --- 4. Main Scraping Loop ---
+for url_index, target_url in enumerate(target_urls):
+    if valid_article_found:
+        break
+        
+    attempts = url_index + 1
     if is_random:
-        print(f"\n--- Attempt #{attempts} ---")
+        print(f"\n--- Article #{attempts}: {target_url.split('/')[-1]} ---")
     
     try:
         response = requests.get(target_url, headers=headers, timeout=10)
@@ -51,26 +75,27 @@ while not valid_table_found:
         article_name = soup.title.string.replace(" - Wikipedia", "") if soup.title else "Unknown Article"
         print(f"Checking: '{article_name}'")
 
-        # --- 4. Parse & Clean Table ---
+        # --- Parse & Clean Table ---
         html_data = StringIO(response.text)
         try:
-            tables = pd.read_html(html_data, flavor='html5lib')
+            # Using flavor 'bs4' for more robust table identification
+            tables = pd.read_html(html_data, flavor='bs4')
         except ValueError:
             tables = []
 
         if not tables:
             print("❌ No tables found in this article.")
-            if not is_random: break # Stop if user provided a specific URL
             continue
 
         table_stats = []
-        found_on_this_page = False
+        eligible_tables_count = 0
         
         for i, df in enumerate(tables):
             rows, cols = df.shape
-            table_stats.append(f"T{i+1}: {rows}x{cols}")
             
             if rows >= MIN_ROWS and cols >= MIN_COLS:
+                eligible_tables_count += 1
+                
                 # Flatten headers if nested
                 if isinstance(df.columns, pd.MultiIndex):
                     df.columns = df.columns.get_level_values(-1)
@@ -110,42 +135,41 @@ while not valid_table_found:
                     "metadata": {
                         "source_url": final_url,
                         "article_name": article_name,
+                        "table_index": i + 1,
                         "row_count": len(records),
                         "column_count": len(df.columns),
                         "column_analysis": column_types,
                         "attempts_made": attempts,
-                        "mode": "random" if is_random else "target"
+                        "mode": "random_candidate" if is_random else "target"
                     },
                     "data": records
                 }
 
                 # --- 7. Save to File ---
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                js_filename = to_camel_case(article_name)
-                file_path = os.path.join(script_dir, js_filename)
+                # Use index suffix only if more than one eligible table is found on page
+                json_filename = get_clean_filename(article_name, index=eligible_tables_count if eligible_tables_count > 1 else None)
+                file_path = os.path.join(OUTPUT_DIR, json_filename)
                 
-                formatted_json = json.dumps(final_output, indent=2)
-
                 with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(f"const tableData = {formatted_json};")
+                    json.dump(final_output, f, indent=2, ensure_ascii=False)
                     
-                print(f"✅ Success! Found valid table ({rows}x{cols}).")
-                print(f"📄 Saved to: {js_filename}")
-                print(f"🔗 Source: {final_url}")
-                valid_table_found = True
-                found_on_this_page = True
-                break 
-        
-        if not found_on_this_page:
-            if is_random:
-                print(f"⚠️ Tables found but too small: {', '.join(table_stats)}")
-                time.sleep(0.5)
+                print(f"✅ Success! Table #{i+1} saved ({rows}x{cols}).")
+                table_stats.append(f"T{i+1}: Saved")
+                valid_article_found = True
             else:
-                print(f"❌ The provided URL did not have a table meeting the requirements ({MIN_ROWS}x{MIN_COLS}).")
-                print(f"📊 Table sizes found: {', '.join(table_stats)}")
-                break # Exit loop for specific URLs
+                table_stats.append(f"T{i+1}: Small ({rows}x{cols})")
+        
+        if eligible_tables_count == 0:
+            print(f"⚠️ No eligible tables: {', '.join(table_stats)}")
+            if is_random:
+                time.sleep(0.5)
+        else:
+            print(f"✨ Finished page: Found {eligible_tables_count} eligible tables.")
 
     except Exception as e:
         print(f"🚨 Error: {e}")
         if not is_random: break
-        time.sleep(2)
+        time.sleep(1)
+
+if not valid_article_found and is_random:
+    print("\n🏁 Finished processing the list. No table met the criteria.")
