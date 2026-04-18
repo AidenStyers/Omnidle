@@ -1,8 +1,17 @@
 import { useState } from "react";
+import type { Guess, Option } from "../data/types";
 
-export default function GuessInput({ options, guesses, onSubmit, disabled, attributes }) {
+interface Props {
+  options: Option[];
+  guesses: Guess[];
+  onSubmit: (name: string) => void;
+  disabled: boolean;
+  attributes: string[];
+}
+
+export default function GuessInput({ options, guesses, onSubmit, disabled, attributes }: Props) {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]   = useState(false);
 
   const guessedNames = guesses.map((g) => g.name);
   const filtered = options.filter(
@@ -11,7 +20,7 @@ export default function GuessInput({ options, guesses, onSubmit, disabled, attri
       !guessedNames.includes(o.name)
   );
 
-  function handleSelect(name) {
+  function handleSelect(name: string) {
     onSubmit(name);
     setQuery("");
     setOpen(false);

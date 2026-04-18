@@ -1,11 +1,13 @@
-export const topic = {
+import type { Topic, Option } from "../types";
+
+export const topic: Topic = {
   id: "italian-artists",
   name: "Best-Selling Italian Artists",
   description: "Guess the best-selling Italian music artist!",
   attributes: ["Region", "Period Active", "Genre", "Est. Sales"],
 };
 
-export const options = [
+export const options: Option[] = [
   { name: "Andrea Bocelli",    Region: "Tuscany",        "Period Active": "1994–present", Genre: "Operatic pop",   "Est. Sales": "90M" },
   { name: "Milva",             Region: "Emilia-Romagna", "Period Active": "1958–2012",    Genre: "Pop / Tango",    "Est. Sales": "80M" },
   { name: "Umberto Tozzi",     Region: "Piedmont",       "Period Active": "1968–present", Genre: "Pop rock",       "Est. Sales": "75M" },

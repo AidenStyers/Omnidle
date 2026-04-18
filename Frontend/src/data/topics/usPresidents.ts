@@ -1,11 +1,13 @@
-export const topic = {
+import type { Topic, Option } from "../types";
+
+export const topic: Topic = {
   id: "us-presidents",
   name: "US Presidents",
   description: "Guess the US President!",
   attributes: ["No.", "Party", "Term Start", "Vice President"],
 };
 
-export const options = [
+export const options: Option[] = [
   { name: "George Washington", "No.": 1,  Party: "Unaffiliated",          "Term Start": "1789", "Vice President": "John Adams" },
   { name: "John Adams",        "No.": 2,  Party: "Federalist",            "Term Start": "1797", "Vice President": "Thomas Jefferson" },
   { name: "Thomas Jefferson",  "No.": 3,  Party: "Dem.-Republican",       "Term Start": "1801", "Vice President": "Aaron Burr" },

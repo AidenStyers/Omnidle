@@ -1,6 +1,7 @@
 import logo from "../assets/Omnidle.png";
+import type { Topic } from "../data/types";
 
-export default function TopicHeader({ topic }) {
+export default function TopicHeader({ topic }: { topic: Topic }) {
   return (
     <header className="topic-header">
       <img src={logo} alt="Omnidle" className="site-logo" />
