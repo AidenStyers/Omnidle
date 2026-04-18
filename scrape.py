@@ -17,25 +17,33 @@ def to_camel_case(text):
     return words[0].lower() + ''.join(word.capitalize() for word in words[1:]) + ".js"
 
 # --- 2. Setup ---
-url = "https://en.wikipedia.org/wiki/Special:Random"
+random_url = "https://en.wikipedia.org/wiki/Special:Random"
 headers = {'User-Agent': 'Mozilla/5.0'}
 
 # Define thresholds
 MIN_ROWS = 10
 MIN_COLS = 4
 
+# --- 3. User Input ---
+user_input = input("Enter a Wikipedia URL (or press Enter for a random article): ").strip()
+target_url = user_input if user_input else random_url
+is_random = not user_input
+
 valid_table_found = False
 attempts = 0
 
-print(f"🚀 Starting scraper. Searching for a table with at least {MIN_ROWS} rows and {MIN_COLS} columns...")
+if is_random:
+    print(f"🚀 Random Mode: Searching for a table with at least {MIN_ROWS} rows and {MIN_COLS} columns...")
+else:
+    print(f"🎯 Target Mode: Attempting to scrape {target_url}...")
 
 while not valid_table_found:
     attempts += 1
-    print(f"\n--- Attempt #{attempts} ---")
+    if is_random:
+        print(f"\n--- Attempt #{attempts} ---")
     
-    # --- 3. Fetch ---
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(target_url, headers=headers, timeout=10)
         final_url = response.url 
         soup = BeautifulSoup(response.text, 'html5lib')
 
@@ -52,9 +60,12 @@ while not valid_table_found:
 
         if not tables:
             print("❌ No tables found in this article.")
+            if not is_random: break # Stop if user provided a specific URL
             continue
 
         table_stats = []
+        found_on_this_page = False
+        
         for i, df in enumerate(tables):
             rows, cols = df.shape
             table_stats.append(f"T{i+1}: {rows}x{cols}")
@@ -77,7 +88,7 @@ while not valid_table_found:
 
                 df = df.map(clean_text)
 
-                # --- 5. Column Analysis (Quantitative vs Qualitative) ---
+                # --- 5. Column Analysis ---
                 column_types = {}
                 for col in df.columns:
                     series = df[col]
@@ -102,7 +113,8 @@ while not valid_table_found:
                         "row_count": len(records),
                         "column_count": len(df.columns),
                         "column_analysis": column_types,
-                        "attempts_made": attempts
+                        "attempts_made": attempts,
+                        "mode": "random" if is_random else "target"
                     },
                     "data": records
                 }
@@ -121,13 +133,19 @@ while not valid_table_found:
                 print(f"📄 Saved to: {js_filename}")
                 print(f"🔗 Source: {final_url}")
                 valid_table_found = True
+                found_on_this_page = True
                 break 
         
-        if not valid_table_found:
-            print(f"⚠️ Tables found but too small: {', '.join(table_stats)}")
-            # Short sleep to be polite to Wikipedia servers
-            time.sleep(0.5)
+        if not found_on_this_page:
+            if is_random:
+                print(f"⚠️ Tables found but too small: {', '.join(table_stats)}")
+                time.sleep(0.5)
+            else:
+                print(f"❌ The provided URL did not have a table meeting the requirements ({MIN_ROWS}x{MIN_COLS}).")
+                print(f"📊 Table sizes found: {', '.join(table_stats)}")
+                break # Exit loop for specific URLs
 
     except Exception as e:
-        print(f"🚨 Network or parsing error: {e}")
+        print(f"🚨 Error: {e}")
+        if not is_random: break
         time.sleep(2)
