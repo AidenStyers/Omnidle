@@ -5,6 +5,7 @@ import re
 import json
 import time
 import random
+import numpy as np
 from io import StringIO
 from bs4 import BeautifulSoup
 
@@ -55,11 +56,13 @@ else:
         print(f"🚨 Error: {CANDIDATES_FILE} not found. Please create the file or enter a URL.")
         target_urls = []
 
-valid_article_found = False
-
 # --- 4. Main Scraping Loop ---
+found_any_eligible_page = False
+
 for url_index, target_url in enumerate(target_urls):
-    if valid_article_found:
+    # If we are in random mode and found a page with tables, we can stop searching.
+    # If we are in target mode, we only have one URL anyway.
+    if is_random and found_any_eligible_page:
         break
         
     attempts = url_index + 1
@@ -88,88 +91,93 @@ for url_index, target_url in enumerate(target_urls):
             continue
 
         table_stats = []
-        eligible_tables_count = 0
+        eligible_tables_on_page = []
         
+        # First pass: Identify all eligible tables
         for i, df in enumerate(tables):
             rows, cols = df.shape
-            
             if rows >= MIN_ROWS and cols >= MIN_COLS:
-                eligible_tables_count += 1
-                
-                # Flatten headers if nested
-                if isinstance(df.columns, pd.MultiIndex):
-                    df.columns = df.columns.get_level_values(-1)
-                
-                # Ensure column names are unique
-                if df.columns.duplicated().any():
-                    df.columns = [f"{c}_{idx}" if duplicated else c 
-                                 for idx, (c, duplicated) in enumerate(zip(df.columns, df.columns.duplicated()))]
-
-                # Clean citations [1], [a] and extra whitespace
-                def clean_text(val):
-                    if isinstance(val, str):
-                        return re.sub(r'\[.*?\]', '', val).strip()
-                    return val
-
-                df = df.map(clean_text)
-
-                # --- 5. Column Analysis ---
-                column_types = {}
-                for col in df.columns:
-                    series = df[col]
-                    if isinstance(series, pd.DataFrame):
-                        series = series.iloc[:, 0]
-                    
-                    test_col = series.astype(str).str.replace(r'[$,%]', '', regex=True)
-                    converted = pd.to_numeric(test_col, errors='coerce')
-                    
-                    if converted.notna().mean() > 0.5:
-                        column_types[col] = "quantitative"
-                    else:
-                        column_types[col] = "qualitative"
-
-                # --- 6. Prepare Final Structure ---
-                records = df.to_dict(orient='records')
-
-                final_output = {
-                    "metadata": {
-                        "source_url": final_url,
-                        "article_name": article_name,
-                        "table_index": i + 1,
-                        "row_count": len(records),
-                        "column_count": len(df.columns),
-                        "column_analysis": column_types,
-                        "attempts_made": attempts,
-                        "mode": "random_candidate" if is_random else "target"
-                    },
-                    "data": records
-                }
-
-                # --- 7. Save to File ---
-                # Use index suffix only if more than one eligible table is found on page
-                json_filename = get_clean_filename(article_name, index=eligible_tables_count if eligible_tables_count > 1 else None)
-                file_path = os.path.join(OUTPUT_DIR, json_filename)
-                
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(final_output, f, indent=2, ensure_ascii=False)
-                    
-                print(f"✅ Success! Table #{i+1} saved ({rows}x{cols}).")
-                table_stats.append(f"T{i+1}: Saved")
-                valid_article_found = True
+                eligible_tables_on_page.append((i, df))
             else:
                 table_stats.append(f"T{i+1}: Small ({rows}x{cols})")
-        
-        if eligible_tables_count == 0:
+
+        if not eligible_tables_on_page:
             print(f"⚠️ No eligible tables: {', '.join(table_stats)}")
             if is_random:
                 time.sleep(0.5)
-        else:
-            print(f"✨ Finished page: Found {eligible_tables_count} eligible tables.")
+            continue
+
+        # Second pass: Process and save eligible tables
+        found_any_eligible_page = True
+        for count, (original_index, df) in enumerate(eligible_tables_on_page):
+            # Flatten headers if nested
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(-1)
+            
+            # Ensure column names are unique
+            if df.columns.duplicated().any():
+                df.columns = [f"{c}_{idx}" if duplicated else c 
+                             for idx, (c, duplicated) in enumerate(zip(df.columns, df.columns.duplicated()))]
+
+            # Clean citations [1], [a] and extra whitespace
+            def clean_text(val):
+                if isinstance(val, str):
+                    return re.sub(r'\[.*?\]', '', val).strip()
+                return val
+
+            df = df.map(clean_text)
+
+            # --- 5. Column Analysis ---
+            column_types = {}
+            for col in df.columns:
+                series = df[col]
+                if isinstance(series, pd.DataFrame):
+                    series = series.iloc[:, 0]
+                
+                test_col = series.astype(str).str.replace(r'[$,%]', '', regex=True)
+                converted = pd.to_numeric(test_col, errors='coerce')
+                
+                if converted.notna().mean() > 0.5:
+                    column_types[col] = "quantitative"
+                else:
+                    column_types[col] = "qualitative"
+
+            # --- 6. JSON Safety Check ---
+            # Replace NaN with None so it becomes 'null' in the resulting JSON
+            df_json_ready = df.replace({np.nan: None})
+            records = df_json_ready.to_dict(orient='records')
+
+            final_output = {
+                "metadata": {
+                    "source_url": final_url,
+                    "article_name": article_name,
+                    "table_index": original_index + 1,
+                    "row_count": len(records),
+                    "column_count": len(df.columns),
+                    "column_analysis": column_types,
+                    "attempts_made": attempts,
+                    "mode": "random_candidate" if is_random else "target"
+                },
+                "data": records
+            }
+
+            # --- 7. Save to File ---
+            # Use index suffix only if more than one eligible table is found on page
+            file_index = count + 1 if len(eligible_tables_on_page) > 1 else None
+            json_filename = get_clean_filename(article_name, index=file_index)
+            file_path = os.path.join(OUTPUT_DIR, json_filename)
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(final_output, f, indent=2, ensure_ascii=False)
+                
+            print(f"✅ Success! Table #{original_index+1} saved as {json_filename} ({len(records)}x{len(df.columns)}).")
+        
+        print(f"✨ Finished page: Found {len(eligible_tables_on_page)} eligible tables.")
 
     except Exception as e:
         print(f"🚨 Error: {e}")
         if not is_random: break
         time.sleep(1)
 
-if not valid_article_found and is_random:
+if not found_any_eligible_page and is_random:
     print("\n🏁 Finished processing the list. No table met the criteria.")
