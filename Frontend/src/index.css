@@ -3,22 +3,22 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --bg: #f4f3ff;
-  --bg2: #eceaff;
+  --bg: #ffffff;
+  --bg2: #fff8f8;
   --surface: #ffffff;
-  --surface2: #f0effe;
-  --border: #dddaf5;
-  --text: #1a1830;
-  --text-muted: #8884aa;
+  --surface2: #fff3f3;
+  --border: #f0d0d0;
+  --text: #1a0a0a;
+  --text-muted: #9a6666;
   --correct: #dcfce7;
   --correct-text: #166534;
-  --wrong: #efefef;
-  --wrong-text: #9999aa;
-  --hint: #fef9c3;
+  --wrong: #f5f5f5;
+  --wrong-text: #999999;
+  --hint: #fefce8;
   --hint-text: #854d0e;
-  --accent1: #6366f1;
-  --accent2: #a855f7;
-  --accent3: #0ea5e9;
+  --accent1: #dc2626;
+  --accent2: #ef4444;
+  --accent3: #facc15;
   font-family: 'Space Grotesk', system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -27,7 +27,7 @@
 body {
   margin: 0;
   background:
-    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(168,85,247,0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(250,204,21,0.15) 0%, transparent 70%),
     var(--bg);
   min-height: 100svh;
 }

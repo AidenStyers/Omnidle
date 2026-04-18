@@ -1,22 +1,23 @@
-// Replace with real API responses when backend is ready
+// Replace with real API responses when backend is ready.
+// todaysTopic and allOptions will come from the backend; ANSWER will never be sent to the client.
 
-export const todaysTopic = {
-  id: 1,
-  name: "Car Brands",
-  description: "Guess today's car brand!",
-  attributes: ["Country", "Founded", "Segment", "Parent Company", "Still Active"],
-};
+import { topic as italianArtistsTopic, options as italianArtistsOptions } from "./topics/italianArtists";
+import { topic as usPresidentsTopic, options as usPresidentsOptions } from "./topics/usPresidents";
+import { topic as rhonJTopic, options as rhonJOptions } from "./topics/rhonj";
 
-export const allOptions = [
-  { name: "Toyota",    Country: "Japan",    Founded: 1937, Segment: "Mass Market", "Parent Company": "Toyota Group",    "Still Active": true },
-  { name: "BMW",       Country: "Germany",  Founded: 1916, Segment: "Luxury",      "Parent Company": "BMW Group",       "Still Active": true },
-  { name: "Ford",      Country: "USA",      Founded: 1903, Segment: "Mass Market", "Parent Company": "Ford Motor Co.",  "Still Active": true },
-  { name: "Ferrari",   Country: "Italy",    Founded: 1939, Segment: "Supercar",    "Parent Company": "Exor N.V.",       "Still Active": true },
-  { name: "Pontiac",   Country: "USA",      Founded: 1926, Segment: "Mass Market", "Parent Company": "GM",              "Still Active": false },
-  { name: "Volkswagen",Country: "Germany",  Founded: 1937, Segment: "Mass Market", "Parent Company": "VW Group",        "Still Active": true },
-  { name: "Honda",     Country: "Japan",    Founded: 1948, Segment: "Mass Market", "Parent Company": "Honda Motor Co.", "Still Active": true },
-  { name: "Lamborghini",Country:"Italy",    Founded: 1963, Segment: "Supercar",    "Parent Company": "VW Group",        "Still Active": true },
+const TOPICS = [
+  { topic: italianArtistsTopic, options: italianArtistsOptions },
+  { topic: usPresidentsTopic,   options: usPresidentsOptions },
+  { topic: rhonJTopic,          options: rhonJOptions },
 ];
 
-// The answer (backend will determine this, never sent to client in prod)
-export const ANSWER = "BMW";
+// Rotate topic by day so each day gets a different one
+const dayIndex = Math.floor(Date.now() / 86400000) % TOPICS.length;
+const { topic, options } = TOPICS[dayIndex];
+
+export const todaysTopic = topic;
+export const allOptions = options;
+
+// Pick a deterministic daily answer from the options list
+const answerIndex = Math.floor(Date.now() / 86400000) % options.length;
+export const ANSWER = options[answerIndex].name;
