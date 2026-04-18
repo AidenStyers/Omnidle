@@ -25,3 +25,6 @@ token.txt
 # Vite cache
 .vite/
 Frontend/.vite/
+
+# AI
+.claude/
