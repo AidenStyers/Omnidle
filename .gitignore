@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+Frontend/node_modules/
+
+# Build output
+dist/
+Frontend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment & secrets
+.env
+.env.*
+token.txt
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Vite cache
+.vite/
+Frontend/.vite/
