@@ -1,0 +1,1 @@
+Connect to sqlite database from command line via 'sqlite3 Game_Info.db' from within the sqlitedb folder.
