@@ -4,6 +4,14 @@ import asyncio
 
 app = FastAPI()
 
+@app.post("/game-results")
+async def receive_game_results(guesses: int):
+    return {
+        "status": "success",
+        "guesses_received": guesses,
+        "result_message": f"You made {guesses} guesses!"
+    }
+
 # Simple HTML page for testing WebSocket
 html = """
 <!DOCTYPE html>
