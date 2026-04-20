@@ -1,0 +1,2 @@
+# Ensures .sh files have correct line endings and can be run in containers
+*.sh text eol=lf

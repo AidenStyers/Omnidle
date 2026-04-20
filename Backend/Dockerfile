@@ -25,5 +25,4 @@ RUN mkdir -p app/tables
 # Expose the port FastAPI will run on
 EXPOSE 8000
 
-# Command to run FastAPI with Uvicorn
-CMD ["./entrypoint.sh"]
+CMD ["bash", "entrypoint.sh"]
