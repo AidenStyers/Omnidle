@@ -8,22 +8,26 @@ app = FastAPI()
 current_table_name = "test_table"
 
 @app.post("/game-results")
-async def receive_game_results(guesses: int):
-    global current_table_name, DB_PATH
+async def receive_game_results(guesses: int, table_name: str):
+    """
+    API call done at the end of the daily Omnidle game. 
+    Recieves the number of guesses and the table played on. Stores the appropriate data. 
+    Then returns the statistics of all players for that table.
+    """
+    global DB_PATH
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    if cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = ?", (current_table_name,)).fetchall()[0][0] == 0:
-        cursor.execute("INSERT INTO game_data VALUES ( ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)", (current_table_name,))
+    if cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = ?", (table_name,)).fetchall()[0][0] == 0:
+        cursor.execute("INSERT INTO game_data VALUES ( ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)", (table_name,))
     
     if guesses < 10:
-        cursor.execute("UPDATE game_data SET in_" + str(guesses) + " = in_" + str(guesses) + " + 1 WHERE name_of_table = ?", (current_table_name,))
-        # cursor.execute("UPDATE game_data SET ? = ? + 1 WHERE name_of_table = ?", ("in_" + str(guesses), "in_" + str(guesses), current_table_name))
+        cursor.execute("UPDATE game_data SET in_" + str(guesses) + " = in_" + str(guesses) + " + 1 WHERE name_of_table = ?", (table_name,))
     else:
-        cursor.execute("UPDATE game_data SET in_10 = in_10 + 1 WHERE name_of_table = ?", (current_table_name,))
+        cursor.execute("UPDATE game_data SET in_10 = in_10 + 1 WHERE name_of_table = ?", (table_name,))
 
-    resp = cursor.execute("SELECT * FROM game_data WHERE name_of_table = ?", (current_table_name,)).fetchall()[0]
+    resp = cursor.execute("SELECT * FROM game_data WHERE name_of_table = ?", (table_name,)).fetchall()[0]
 
     conn.commit()
     conn.close()
