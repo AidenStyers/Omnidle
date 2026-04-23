@@ -14,18 +14,16 @@ async def receive_game_results(guesses: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    print(cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = '" + current_table_name + "'").fetchall())
-
-    if cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = '" + current_table_name + "'").fetchall()[0][0] == 0:
-        print("Test: " + "INSERT INTO game_data VALUES ('" + current_table_name + "'" + (", 0"*10) + ")")
-        cursor.execute("INSERT INTO game_data VALUES ('" + current_table_name + "'" + (", 0"*10) + ")")
+    if cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = ?", (current_table_name,)).fetchall()[0][0] == 0:
+        cursor.execute("INSERT INTO game_data VALUES ( ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)", (current_table_name,))
     
     if guesses < 10:
-        cursor.execute("UPDATE game_data SET in_" + str(guesses) + " = in_" + str(guesses) + " + 1 WHERE name_of_table = '" + current_table_name + "'")
+        cursor.execute("UPDATE game_data SET in_" + str(guesses) + " = in_" + str(guesses) + " + 1 WHERE name_of_table = ?", (current_table_name,))
+        # cursor.execute("UPDATE game_data SET ? = ? + 1 WHERE name_of_table = ?", ("in_" + str(guesses), "in_" + str(guesses), current_table_name))
     else:
-        cursor.execute("UPDATE game_data SET in_10 = in_10 + 1 WHERE name_of_table = '" + current_table_name + "'")
+        cursor.execute("UPDATE game_data SET in_10 = in_10 + 1 WHERE name_of_table = ?", (current_table_name,))
 
-    resp = cursor.execute("SELECT * FROM game_data WHERE name_of_table = '" + current_table_name + "'").fetchall()[0]
+    resp = cursor.execute("SELECT * FROM game_data WHERE name_of_table = ?", (current_table_name,)).fetchall()[0]
 
     conn.commit()
     conn.close()
