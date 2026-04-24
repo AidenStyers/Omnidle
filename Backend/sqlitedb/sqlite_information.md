@@ -1,1 +1,2 @@
 Connect to sqlite database from command line via 'sqlite3 Game_Info.db' from within the sqlitedb folder.
+Reset databases from within a containers command line via 'python -c "import db_management; db_management.reset_tables()"'
