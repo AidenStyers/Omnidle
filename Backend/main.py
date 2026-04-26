@@ -1,6 +1,9 @@
 import os
 import json
 import sqlite3
+from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 import asyncio
 from fastapi import FastAPI, WebSocket, HTTPException, Query
 from fastapi.responses import HTMLResponse
@@ -30,6 +33,18 @@ async def get_table(filename: str = Query(..., description="The name of the tabl
             return json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+# Allow the Vite dev server to make cross-origin requests to this API.
+# Without this the browser blocks all HTTP responses from a different origin.
+# WebSocket connections are not subject to CORS but use the same origin allowlist
+# via the browser's Upgrade handshake Origin header.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+current_table_name = "test_table"
 
 @app.post("/game-results")
 async def receive_game_results(guesses: int, table_name: str):
@@ -59,6 +74,41 @@ async def receive_game_results(guesses: int, table_name: str):
     return {"status": "success", "global_guesses": resp}
 
 # --- WebSocket & Test UI ---
+
+
+# Simple HTML page for testing WebSocket
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Test</title>
+    </head>
+    <body>
+        <h1>WebSocket Test</h1>
+        <div id="messages"></div>
+        <script>
+            const ws = new WebSocket("ws://localhost:8000/ws");
+            ws.onmessage = function(event) {
+                const messages = document.getElementById('messages');
+                messages.innerHTML += '<p>' + event.data + '</p>';
+            };
+            ws.onopen = function(event) {
+                console.log("WebSocket opened");
+            };
+        </script>
+    </body>
+</html>
+"""
+
+@app.get("/health")
+async def health():
+    # Polled by the Docker daemon for container health monitoring
+    return {"status": "ok"}
+
+@app.get("/")
+async def get():
+    return HTMLResponse(html)
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
