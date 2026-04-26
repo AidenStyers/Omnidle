@@ -1,11 +1,38 @@
+import os
+import json
+import sqlite3
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 import asyncio
-from db_management import *
+from fastapi import FastAPI, WebSocket, HTTPException, Query
+from fastapi.responses import HTMLResponse
+from db_management import DB_PATH, initialize # Assuming you have an init function
 
 app = FastAPI()
 
+# Path relative to the /app directory in your container
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TABLES_DIR = os.path.join(BASE_DIR, "tables")
+
+@app.get("/get-tables")
+async def get_table(filename: str = Query(..., description="The name of the table to load")):
+    print(f"Debug: Processing request for {filename}")
+    
+    actual_name = f"{filename}.json" if not filename.endswith(".json") else filename
+    file_path = os.path.join(TABLES_DIR, actual_name)
+
+    if not os.path.isfile(file_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Table '{actual_name}' not found at {file_path}."
+        )
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 # Allow the Vite dev server to make cross-origin requests to this API.
 # Without this the browser blocks all HTTP responses from a different origin.
 # WebSocket connections are not subject to CORS but use the same origin allowlist
@@ -46,6 +73,7 @@ async def receive_game_results(guesses: int, table_name: str):
 
     return {"status": "success", "global_guesses": resp}
 
+# --- WebSocket & Test UI ---
 
 
 # Simple HTML page for testing WebSocket
