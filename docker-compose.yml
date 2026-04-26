@@ -27,7 +27,7 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 120s     # infrequent to avoid log noise; startup gate uses start_period
       timeout: 3s       # fail the probe if no response within 3s
-      retries: 5        # mark unhealthy after 5 consecutive failures
+      retries: 2        # mark unhealthy after 5 consecutive failures
       start_period: 10s # grace period before failures count (Uvicorn boot time)
 
 networks:
