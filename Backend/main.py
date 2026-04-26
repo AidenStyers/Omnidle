@@ -1,10 +1,22 @@
 from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 import asyncio
 from db_management import *
 
 app = FastAPI()
 
+# Allow the Vite dev server to make cross-origin requests to this API.
+# Without this the browser blocks all HTTP responses from a different origin.
+# WebSocket connections are not subject to CORS but use the same origin allowlist
+# via the browser's Upgrade handshake Origin header.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 current_table_name = "test_table"
 
 @app.post("/game-results")
@@ -59,6 +71,11 @@ html = """
     </body>
 </html>
 """
+
+@app.get("/health")
+async def health():
+    # Polled by the Docker daemon for container health monitoring
+    return {"status": "ok"}
 
 @app.get("/")
 async def get():

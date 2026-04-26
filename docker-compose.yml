@@ -1,8 +1,35 @@
+# Omnidle – multi-service compose config
+# Services communicate over omnidle-net; only their respective ports are exposed to the host.
+
 services:
   frontend:
     build: ./Frontend
     ports:
-      - "5173:5173"
+      - "5173:5173"   # Vite dev server
     volumes:
-      - ./Frontend:/app
-      - /app/node_modules
+      - ./Frontend:/app           # live-reload source
+      - /app/node_modules         # keep container's node_modules isolated from host
+    networks:
+      - omnidle-net
+    depends_on:
+      backend:
+        condition: service_healthy  # waits until /health returns 200
+
+  backend:
+    build: ./Backend
+    ports:
+      - "8000:8000"   # FastAPI / Uvicorn
+    volumes:
+      - ./Backend:/app            # live-reload source
+    networks:
+      - omnidle-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 120s     # infrequent to avoid log noise; startup gate uses start_period
+      timeout: 3s       # fail the probe if no response within 3s
+      retries: 2        # mark unhealthy after 5 consecutive failures
+      start_period: 10s # grace period before failures count (Uvicorn boot time)
+
+networks:
+  omnidle-net:
+    driver: bridge   # lets frontend reach backend at http://backend:8000
