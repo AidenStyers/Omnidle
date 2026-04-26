@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of your app
 COPY . .
 
-RUN mkdir -p app/sqlitedb
-RUN mkdir -p app/tables
+RUN mkdir -p sqlitedb
+RUN mkdir -p tables
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
