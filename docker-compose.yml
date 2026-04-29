@@ -21,7 +21,7 @@ services:
       - "8000:8000"   # FastAPI / Uvicorn
     volumes: # Mount folders individually so that we can be more selective about what is actually inside the container
       - ./Backend/sqlitedb:/app/sqlitedb
-      - ./Backend/tables:/app/sqlitedb      
+      - ./Backend/tables:/app/tables      
     networks:
       - omnidle-net
     healthcheck:
