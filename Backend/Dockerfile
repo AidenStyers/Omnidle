@@ -16,11 +16,12 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your app
-COPY . .
+# Copy all needed files in base directory
+# Folders will be mounted via the compose file
+COPY entrypoint.sh .
+COPY main.py .
+COPY db_management.py .
 
-RUN mkdir -p sqlitedb
-RUN mkdir -p tables
 
 # Expose the port FastAPI will run on
 EXPOSE 8000

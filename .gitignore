@@ -28,3 +28,6 @@ Frontend/.vite/
 
 # AI
 .claude/
+
+# Backend files
+Backend/sqlitedb/Game_Data.db

@@ -6,3 +6,5 @@ services:
     build:
       context: ./Backend
       target: test-env  # Tells Docker to use the Stage 2 (with pytest)
+    volumes: # Mount tests folder
+      - ./Backend/tests:/app/tests

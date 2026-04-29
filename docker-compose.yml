@@ -19,8 +19,9 @@ services:
     build: ./Backend
     ports:
       - "8000:8000"   # FastAPI / Uvicorn
-    volumes:
-      - ./Backend:/app            # live-reload source
+    volumes: # Mount folders individually so that we can be more selective about what is actually inside the container
+      - ./Backend/sqlitedb:/app/sqlitedb
+      - ./Backend/tables:/app/sqlitedb      
     networks:
       - omnidle-net
     healthcheck:
