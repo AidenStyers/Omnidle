@@ -1,5 +1,5 @@
 # Use Slim for better compatibility with FastAPI/Pydantic wheels
-FROM python:3.11-slim
+FROM python:3.11-slim as base
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -26,3 +26,11 @@ RUN mkdir -p tables
 EXPOSE 8000
 
 CMD ["bash", "entrypoint.sh"]
+
+# --- Stage 2: Test (Only used for testing) ---
+FROM base as test-env
+# Install testing only packages
+COPY test_requirements.txt .
+RUN pip install --no-cache-dir -r test_requirements.txt
+
+

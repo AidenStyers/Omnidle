@@ -1,0 +1,8 @@
+services:
+
+  # Need to slightly change build for testing
+  # Puts testing code into app/tests and installs new testing modules
+  backend:
+    build:
+      context: ./Backend
+      target: test-env  # Tells Docker to use the Stage 2 (with pytest)

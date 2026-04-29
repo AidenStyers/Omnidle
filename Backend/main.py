@@ -7,13 +7,30 @@ from fastapi.responses import HTMLResponse
 import asyncio
 from fastapi import FastAPI, WebSocket, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from db_management import DB_PATH, initialize # Assuming you have an init function
+from db_management import *
 
 app = FastAPI()
 
 # Path relative to the /app directory in your container
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TABLES_DIR = os.path.join(BASE_DIR, "tables")
+
+
+
+# Allow the Vite dev server to make cross-origin requests to this API.
+# Without this the browser blocks all HTTP responses from a different origin.
+# WebSocket connections are not subject to CORS but use the same origin allowlist
+# via the browser's Upgrade handshake Origin header.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+current_table_name = "test_table"
 
 @app.get("/get-tables")
 async def get_table(filename: str = Query(..., description="The name of the table to load")):
@@ -33,18 +50,7 @@ async def get_table(filename: str = Query(..., description="The name of the tabl
             return json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
-# Allow the Vite dev server to make cross-origin requests to this API.
-# Without this the browser blocks all HTTP responses from a different origin.
-# WebSocket connections are not subject to CORS but use the same origin allowlist
-# via the browser's Upgrade handshake Origin header.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-current_table_name = "test_table"
+
 
 @app.post("/game-results")
 async def receive_game_results(guesses: int, table_name: str):
@@ -60,7 +66,7 @@ async def receive_game_results(guesses: int, table_name: str):
 
     if cursor.execute("SELECT COUNT(*) FROM game_data WHERE name_of_table = ?", (table_name,)).fetchall()[0][0] == 0:
         cursor.execute("INSERT INTO game_data VALUES ( ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)", (table_name,))
-    
+
     if guesses < 10:
         cursor.execute("UPDATE game_data SET in_" + str(guesses) + " = in_" + str(guesses) + " + 1 WHERE name_of_table = ?", (table_name,))
     else:
@@ -72,6 +78,8 @@ async def receive_game_results(guesses: int, table_name: str):
     conn.close()
 
     return {"status": "success", "global_guesses": resp}
+
+
 
 # --- WebSocket & Test UI ---
 
