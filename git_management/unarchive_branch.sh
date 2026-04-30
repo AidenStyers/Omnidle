@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "VITAL: Make sure all of your local changes are committed! Otherwise only some of the commands will run. CTRL-C right now and check!!"
+echo "Make sure all of your local changes are committed! Otherwise the script will fail. CTRL-C right now and check!!"
 
 read -p "Enter the name of the branch to un-archive: " BRANCH_NAME
 
