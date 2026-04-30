@@ -8,7 +8,7 @@ read -p "Enter the name of the branch to archive: " BRANCH_NAME
 git checkout $BRANCH_NAME 
 git tag archive/$BRANCH_NAME
 git push origin archive/$BRANCH_NAME --no-verify
-git checkout main
+git checkout dev
 git branch -D $BRANCH_NAME          # Local delete
 git push origin --delete $BRANCH_NAME --no-verify # Remote delete
 

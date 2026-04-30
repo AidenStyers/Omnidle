@@ -9,5 +9,6 @@ git checkout -b $BRANCH_NAME archive/$BRANCH_NAME
 git push origin $BRANCH_NAME --no-verify
 git tag -d archive/$BRANCH_NAME
 git push origin --delete archive/$BRANCH_NAME --no-verify
+git checkout dev
 
 echo "$BRANCH_NAME un-archived!"
