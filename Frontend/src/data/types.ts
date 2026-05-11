@@ -24,9 +24,6 @@ export interface Option {
 
 
 
-
-
-
 export type HintType = "correct" | 'higher' | 'lower' | 'wrong'
 
 export interface AttrResult {
