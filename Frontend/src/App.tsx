@@ -8,8 +8,7 @@ export default function App() {
   const { topic, options, guesses, won, submitGuess } = useGame()
 
   return (
-
-    <div className= "app">
+    <div className="app">
       <TopicHeader topic={topic} />
       <main className="game">
         {won ? (
@@ -24,7 +23,6 @@ export default function App() {
           />
         )}
         <GameBoard guesses={guesses} attributes={topic.attributes} />
-        
       </main>
     </div>
   )
