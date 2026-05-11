@@ -1,0 +1,1 @@
+In order to archive a branch you need to run ./archive_branch.sh in a git bash terminal (if youre using windows). Just go to the plus sign in the VS Code terminal and select 'git bash'. Make sure all your local changes are committed so that the script can run properly. The un-archive script works in the same way, with the same caveats.
