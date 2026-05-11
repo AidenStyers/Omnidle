@@ -1,5 +1,5 @@
-import logo from "../assets/Omnidle.png";
-import type { Topic } from "../data/types";
+import logo from '../assets/Omnidle.png'
+import type { Topic } from '../data/types'
 
 export default function TopicHeader({ topic }: { topic: Topic }) {
   return (
@@ -9,5 +9,5 @@ export default function TopicHeader({ topic }: { topic: Topic }) {
       <h1 className="topic-name">{topic.name}</h1>
       <p className="topic-desc">{topic.description}</p>
     </header>
-  );
+  )
 }

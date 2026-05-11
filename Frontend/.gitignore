@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+.husky/_
 dist-ssr
 *.local
 
