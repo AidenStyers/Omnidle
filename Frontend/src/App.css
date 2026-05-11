@@ -4,9 +4,7 @@
   max-width: 960px;
   padding: 0 20px 64px;
 }
-
-.game {
-  display: flex;
+.game {display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
@@ -22,7 +20,7 @@
 /* ── Topic Header ───────────────────────────────────── */
 .topic-header {
   display: flex;
-  flex-direction: column;
+  flex-direction:: column;;
   align-items: center;
   text-align: center;
   padding: 4px 0 0;
@@ -31,7 +29,7 @@
 }
 
 .topic-header::after {
-  content: '';
+  content: "";
   display: block;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border), transparent);

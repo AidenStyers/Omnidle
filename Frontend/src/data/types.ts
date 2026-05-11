@@ -7,16 +7,33 @@ export interface Topic {
 
 export interface Option {
   name: string
-  [attr: string]: string | number | boolean
-}
+  [attr: string]: string | number | boolean }
 
-export type HintType = 'correct' | 'higher' | 'lower' | 'wrong'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export type HintType = "correct" | 'higher' | 'lower' | 'wrong'
 
 export interface AttrResult {
+  
   attr: string
   value: string
-  hint: HintType
-}
+  hint: HintType }
 
 export interface Guess {
   name: string
