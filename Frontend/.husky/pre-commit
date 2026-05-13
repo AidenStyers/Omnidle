@@ -1,13 +1,14 @@
 cd Frontend
 npx lint-staged
 
+
+# Backend tests
 cd ..
 
-# Define the Compose command with both files to avoid repetition
+# Command to run test containers
 # We use the -f flag to merge our base config with our test-specific overrides
 COMPOSE_CMD="docker compose -f docker-compose.yml -f docker-compose.test.yml"
 
-# --- THE TRAP ---
 # This ensures that even if you hit Ctrl+C or the tests fail, 
 # 'docker compose down' is executed to clean up your system resources.
 # 'EXIT' covers normal exits, errors, and manual interruptions.
