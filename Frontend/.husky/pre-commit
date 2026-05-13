@@ -1,2 +1,50 @@
 cd Frontend
 npx lint-staged
+
+cd ..
+
+# Define the Compose command with both files to avoid repetition
+# We use the -f flag to merge our base config with our test-specific overrides
+COMPOSE_CMD="docker compose -f docker-compose.yml -f docker-compose.test.yml"
+
+# --- THE TRAP ---
+# This ensures that even if you hit Ctrl+C or the tests fail, 
+# 'docker compose down' is executed to clean up your system resources.
+# 'EXIT' covers normal exits, errors, and manual interruptions.
+cleanup() {
+    echo "🧹 Cleanup: Tearing down test containers..."
+    $COMPOSE_CMD down -v
+}
+trap cleanup EXIT
+
+echo "🚀 Starting isolated test environment..."
+
+# Build and Start test containers
+# --build: Ensures your latest code/test_requirements are baked into the image
+# -d: Runs in the background so we can execute commands against it
+if ! $COMPOSE_CMD up --quiet-build -d --build; then
+    echo "❌ ERROR: Docker Compose failed to start."
+    exit 1
+fi
+
+echo "🧪 Executing Pytest inside the backend container..."
+
+# Run tests within backend container
+docker exec omnidle-backend-1 pytest
+
+# 3. Capture the result of the pytest command
+RESULT=$?
+
+# Final Validation
+# If the exit code is 0, the hook finishes and the push proceeds.
+# If the exit code is non-zero, the hook exits with 1 and blocks the push.
+if [ $RESULT -eq 0 ]; then
+    echo "✅ All tests passed! Proceeding with push..."
+    exit 0
+else
+    echo "--------------------------------------------------------"
+    echo "❌ FAIL: Pytest failed. Push aborted."
+    echo "Please fix the failing tests before pushing."
+    echo "--------------------------------------------------------"
+    exit 1
+fi
