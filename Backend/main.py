@@ -58,6 +58,7 @@ async def receive_game_results(guesses: int, table_name: str):
     API call done at the end of the daily Omnidle game. 
     Recieves the number of guesses and the table played on. Stores the appropriate data. 
     Then returns the statistics of all players for that table.
+    All games which took ten or more guesses are put in one 10+ category.
     """
     global DB_PATH
 
@@ -80,48 +81,9 @@ async def receive_game_results(guesses: int, table_name: str):
     return {"status": "success", "global_guesses": resp}
 
 
-
-# --- WebSocket & Test UI ---
-
-
-# Simple HTML page for testing WebSocket
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebSocket Test</title>
-    </head>
-    <body>
-        <h1>WebSocket Test</h1>
-        <div id="messages"></div>
-        <script>
-            const ws = new WebSocket("ws://localhost:8000/ws");
-            ws.onmessage = function(event) {
-                const messages = document.getElementById('messages');
-                messages.innerHTML += '<p>' + event.data + '</p>';
-            };
-            ws.onopen = function(event) {
-                console.log("WebSocket opened");
-            };
-        </script>
-    </body>
-</html>
-"""
-
 @app.get("/health")
 async def health():
     # Polled by the Docker daemon for container health monitoring
     return {"status": "ok"}
 
-@app.get("/")
-async def get():
-    return HTMLResponse(html)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        # Simulate sending data to frontend
-        data = "Hello from backend!"
-        await websocket.send_text(data)
-        await asyncio.sleep(5)  # Send every 5 seconds

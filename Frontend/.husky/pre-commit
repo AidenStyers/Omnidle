@@ -1,3 +1,4 @@
+# Frontend linting and formatting
 cd Frontend
 npx lint-staged
 

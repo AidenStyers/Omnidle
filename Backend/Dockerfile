@@ -17,6 +17,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all needed files in base directory
+# Add onto this list as mroe fiels are required
 # Folders will be mounted via the compose file
 COPY entrypoint.sh .
 COPY main.py .
